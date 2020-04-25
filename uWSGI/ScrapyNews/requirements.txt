@@ -1,0 +1,16 @@
+django==2.0.0
+pymysql
+requests
+bs4
+djangorestframework==3.8.1
+elasticsearch
+scrapy
+mysqlclient
+scrapy_djangoitem
+channels
+channels_redis==2.3.3
+confluent_kafka
+pandas
+psycopg2
+uwsgi
+django-cors-headers
