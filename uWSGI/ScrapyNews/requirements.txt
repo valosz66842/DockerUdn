@@ -2,7 +2,7 @@ django==2.0.0
 pymysql
 requests
 bs4
-djangorestframework==3.8.1
+djangorestframework==3.9.1
 elasticsearch
 scrapy
 mysqlclient
