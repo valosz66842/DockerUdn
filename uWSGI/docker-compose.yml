@@ -1,0 +1,101 @@
+version: '3'
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: ./
+      dockerfile: dockerfile_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - api_data:/docker_api
+      - ./log:/var/log/nginx
+    depends_on:
+      - pythonweb
+  pythonweb:
+    container_name: pythonweb
+    build:
+      context: ./
+      dockerfile: dockerfile_ScrapyNews
+    restart: always
+    ports:
+      - "8000:8000"
+    command: uwsgi --ini uwsgi.ini
+    volumes:
+      - api_data:/docker_api
+    depends_on:
+      - mysql
+      - redis
+      - elasticsearch
+      - kafka
+  mysql:
+    image: mysql
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=aaaa
+    volumes:
+      - mysql_data:/var/lib/postgresql/data/
+      - ./mysql_db/mysql_data:/var/lib/mysql
+      - ./mysql_db/mysql_init:/docker-entrypoint-initdb.d/
+  redis:
+    image: redis
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    networks:
+      - elk
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.2.4
+    ports:
+      - "5000:5000"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.4
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.0.0
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka:
+    image: confluentinc/cp-kafka:5.0.0
+    hostname: kafka
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+    api_data:
+    mysql_data:

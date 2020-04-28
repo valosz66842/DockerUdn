@@ -1,0 +1,21 @@
+upstranm uwsgi{
+    server unix:/docker_api/app.sock
+}
+
+server {
+    listen  80;
+    server_name twtrubiks.com www.twturbiks.com;
+    charset   urf-8;
+    
+    client_max_body_size 75M;
+    
+    location /static 
+    {
+        alias /docker_api/static/;
+    }
+    location /
+    {
+    	uwsgi_pass uwsgi;
+	include		/etc/nginx/uwsgi_params;	
+    }
+}

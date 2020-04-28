@@ -1,0 +1,36 @@
+設定Elasticsearch
+sudo sysctl -w vm.max_map_count=262144
+設定網址為 django.gcp.com
+sudo vi /etc/hosts
+
+創建mysql table
+docker exec -it mysql bash
+
+mysql -u root -p
+
+密碼:aaaa
+
+SET SQL_SAFE_UPDATES=0;
+CREATE DATABASE IF NOT EXISTS udn;
+CREATE TABLE udn.udn (title VARCHAR(2000) CHARACTER SET utf8,link VARCHAR(2000) CHARACTER SET utf8,report VARCHAR(2000) CHARACTER SET utf8,content VARCHAR(2000) CHARACTER SET utf8,time VARCHAR(2000) CHARACTER SET utf8,id VARCHAR(2000) CHARACTER SET utf8,img VARCHAR(2000) CHARACTER SET utf8);
+alter table udn.udn modify column id varchar(200);
+ALTER TABLE udn.udn ADD PRIMARY KEY (id);
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'aaaa';
+flush privileges;
+ALTER TABLE udn.udn DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+
+創建kafka topic 
+docker exec -it kafka bash
+kafka-topics --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic kafkatopic
+
+
+設定Django數據庫
+docker exec -it pythonweb bash
+
+python manage.py makemigrations WebNews
+python manage.py migrate
+python manage.py collectstatic
+
+爬取資料 讓網頁使用
+scrapy crawl udn
+

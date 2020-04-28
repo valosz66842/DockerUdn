@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN” “http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>新聞列表</title>
+        <link href="{% static 'css/Scrapy.css' %}" rel="stylesheet" />
+        <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet" crossorigin="anonymous" />
+        <script src="{% static 'js/jquery-3.1.0.js' %}"></script>
+                <style type="text/css">
+        #layoutSidenav{
+        height:1150px;
+        overflow-y: auto;//當div中y方向的內容溢位時，y軸分別顯示滾動條
+        border:1px solid red;
+        }
+        </style>
+    </head>
+    <body class="sb-nav-fixed">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+            <a class="navbar-brand" href="/index/">新聞列表</a><button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
+
+        </nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <div class="sb-sidenav-menu-heading"></div>
+                            <a class="nav-link" href="/index/"><div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                首頁</a>
+                            <div class="sb-sidenav-menu-heading"></div>
+                        </div>
+                    </div>
+
+                </nav>
+            </div>
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid">
+                        <h1 class="mt-4"><font color="black" size="13px">{{ip}}</font></h1>
+                    </div>
+                        <div class="card mb-4" >
+                            <div class="card-header" ><i class="fas fa-table mr-1"></i>UDN所有新聞列表</div>
+                            <div class="card-body">
+                                <div class="table-responsive" >
+                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                        <thead >
+                                        </thead>
+                                       <tfoot id="scrollTest">-->
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <script>
+                    $.ajax({
+                        url: "Udn_Ajax/" ,
+                        data: {},
+                        success: function(data) {
+                            $news_list = null;
+                            $results = data["results"];
+                            $($results).each(function(){
+                                                    var temp_news_element = String.format(
+                                                        `<h1>
+                                                        <font color="black" size="13px">
+                                                        <ol class="breadcrumb mb-4" bgcolor="#ffffff" >
+                                                                <img src='{3}' width="400" height="300">
+                                                                <a bgcolor="#ffffff" >
+                                                                    文章標題:{2}<br>
+                                                                    發文時間:{0}<br>
+                                                                    原新聞網址:{5}<br>
+                                                                    <br>
+                                                                    <button class="flip" id="flip{1}">詳細文章內容</button>
+                                                                </a>
+                                                                <br>
+                                                        </ol>
+                                                        </font>
+                                                        <div class="panel" id="panel{1}">
+                                                        <p>{4}</p></div>
+                                                        <script>
+                                                        $("#flip{1}").click(function(){
+                                                                $("#panel{1}").slideToggle("slow");
+                                                                               $.ajax({
+                                                                url: "record/" ,
+                                                                data: { "datatitle" : "{2}" },
+                                                            success: function(data){}
+                                                                });
+                                                              });</`,$(this)[0]["time"],$(this)[0]["id"],$(this)[0]["title"],$(this)[0]["img"],$(this)[0]["content"],$(this)[0]["link"]);
+                                                        temp_news_element+=String.format(`script>`);
+                                $("#scrollTest").prepend(temp_news_element);
+                            })
+                        }
+                    });
+                    </script>
+                    <script>
+                    var page = 1
+                    $("#layoutSidenav").scroll(function(){
+                        var h = $(this).height();
+                        var sh = $(this)[0].scrollHeight;
+                        var st =$(this)[0].scrollTop;
+                        if(parseInt(h)+parseInt(st)>=parseInt(sh)){//滑到底部
+                            page=page+1;
+                            $.ajax({
+                                url: "Udn_Ajax/?page="+page ,//翻頁
+                                data: {},
+                                success: function(data) {
+                                    $news_list = null;
+                                    $results = data["results"];
+                                    $($results).each(function(){
+                                                            var temp_news_element = String.format(
+                                                                `<h1>
+                                                                <font color="black" size="13px">
+                                                                <ol class="breadcrumb mb-4" bgcolor="#ffffff" >
+                                                                        <img src='{3}' width="400" height="300">
+                                                                        <a bgcolor="#ffffff" >
+                                                                            文章標題:{2}<br>
+                                                                            發文時間:{0}<br>
+                                                                            原新聞網址:{5}<br>
+                                                                            <br>
+                                                                            <button class="flip" id="flip{1}">詳細文章內容</button>
+                                                                        </a>
+                                                                        <br>
+                                                                </ol>
+                                                                </font>
+                                                                <div class="panel" id="panel{1}">
+                                                                <p>{4}</p></div>
+                                                                <script>
+                                                                $("#flip{1}").click(function(){
+                                                                        $("#panel{1}").slideToggle("slow"); //設定文章收縮事件
+                                                                        $.ajax({//點擊時 紀錄使用者ip跟觀看文章
+                                                                        url: "record/" ,
+                                                                        data: { "datatitle" : "{2}" },
+                                                                    success: function(data){}
+                                                                        });
+                                                                      });
+                                                                 </`,$(this)[0]["time"],$(this)[0]["id"],$(this)[0]["title"],$(this)[0]["img"],$(this)[0]["content"],$(this)[0]["link"]);
+                                                                temp_news_element+=String.format(`script>`);
+                                        $("#scrollTest").prepend(temp_news_element);
+                                    })
+                                   }
+                               });
+                        }
+                    })
+                    </script>
+                    <script>
+                        //可在Javascript中使用如同C#中的string.format
+                    //使用方式 : var fullName = String.format('Hello. My name is {0} {1}.', 'FirstName', 'LastName');
+                    String.format = function ()
+                    {
+                        var s = arguments[0];
+                        if (s == null) return "";
+                        for (var i = 0; i < arguments.length - 1; i++)
+                        {
+                            var reg = getStringFormatPlaceHolderRegEx(i);
+                            s = s.replace(reg, (arguments[i + 1] == null ? "" : arguments[i + 1]));
+                        }
+                        return cleanStringFormatResult(s);
+                    }
+                    //可在Javascript中使用如同C#中的string.format (對jQuery String的擴充方法)
+                    //使用方式 : var fullName = 'Hello. My name is {0} {1}.'.format('FirstName', 'LastName');
+                    String.prototype.format = function ()
+                    {
+                        var txt = this.toString();
+                        for (var i = 0; i < arguments.length; i++)
+                        {
+                            var exp = getStringFormatPlaceHolderRegEx(i);
+                            txt = txt.replace(exp, (arguments[i] == null ? "" : arguments[i]));
+                        }
+                        return cleanStringFormatResult(txt);
+                    }
+                    //讓輸入的字串可以包含{}
+                    function getStringFormatPlaceHolderRegEx(placeHolderIndex)
+                    {
+                        return new RegExp('({)?\\{' + placeHolderIndex + '\\}(?!})', 'gm')
+                    }
+                    //當format格式有多餘的position時，就不會將多餘的position輸出
+                    //ex:
+                    // var fullName = 'Hello. My name is {0} {1} {2}.'.format('firstName', 'lastName');
+                    // 輸出的 fullName 為 'firstName lastName', 而不會是 'firstName lastName {2}'
+                    function cleanStringFormatResult(txt)
+                    {
+                        if (txt == null) return "";
+                        return txt.replace(getStringFormatPlaceHolderRegEx("\\d+"), "");
+                    }
+                    </script>
+                    <script>
+                    {% if os_name == 'nt' %}
+                        var news_socket = new WebSocket(
+                            'ws://'+ window.location.host  +
+                            '/ws/news_streaming/');
+                    {% else %}
+                         var news_socket = new WebSocket('ws://{{my_ip}}:8000/wss/news_streaming/');
+                    {% endif %}
+                    news_socket.onopen = function(e){
+                        console.log("已連接到 WebSocket！")
+                    };
+                    news_socket.onmessage = function(e) {
+                        var data = JSON.parse(e.data);
+                        model_json = jQuery.parseJSON(data['model'].text_data);
+                            var temp_news_element = String.format(
+                                                        `<h1>
+                                                        <font color="black" size="13px">
+                                                        <ol class="breadcrumb mb-4" bgcolor="#ffffff" >
+                                                                <img src='{3}' width="400" height="300">
+                                                                <a bgcolor="#ffffff" >
+                                                                    文章標題:{2}<br>
+                                                                    發文時間:{0}<br>
+                                                                    原新聞網址:{5}<br>
+                                                                    <br>
+                                                                    <button class="flip" id="flip{1}">詳細文章內容</button>
+                                                                </a>
+                                                                <br>
+                                                        </ol>
+                                                        </font>
+                                                        <div class="panel" id="panel{1}">
+                                                        <p>{4}</p></div>
+                                                        <script>
+                                                        $("#flip{1}").click(function(){
+                                                                $("#panel{1}").slideToggle("slow");
+                                                                $.ajax({
+                                                                url: "record/" ,
+                                                                data: { "datatitle" : "{2}" },
+                                                            success: function(data){}
+                                                                });
+                                                              });
+                                                         </`,model_json["time"],model_json["id"],model_json["title"],model_json["img"],model_json["content"],model_json["link"]);
+                                                        temp_news_element+=String.format(`script>`);
+                                $("#scrollTest").prepend(temp_news_element);
+                        alert("有新的新聞");
+                    };
+                    news_socket.onclose = function(e) {
+                        console.log(" 斷線WebSocket！")
+                        console.error('News socket closed unexpectedly');
+                    };
+
+                </script>
+
+                    </div>
+                </main>
+            </div>
+        </div>
+        <script src="{% static 'js/scripts.js' %}"></script>
+    </body>
+</html>
